@@ -1,0 +1,85 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { api } from './lib/api.js';
+import NavBar from './components/NavBar.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
+import PlaylistDetailPage from './pages/PlaylistDetailPage.jsx';
+import AnalysisPage from './pages/AnalysisPage.jsx';
+import PlanBuilderPage from './pages/PlanBuilderPage.jsx';
+import HistoryPage from './pages/HistoryPage.jsx';
+
+function useAuth() {
+  const [authenticated, setAuthenticated] = useState(null);
+
+  useEffect(() => {
+    api
+      .authStatus()
+      .then((data) => setAuthenticated(data.authenticated))
+      .catch(() => setAuthenticated(false));
+  }, []);
+
+  return authenticated;
+}
+
+function RequireAuth({ authenticated, children }) {
+  if (authenticated === null) return <div className="loading">Loading...</div>;
+  if (!authenticated) return <Navigate to="/login" replace />;
+  return children;
+}
+
+export default function App() {
+  const authenticated = useAuth();
+
+  return (
+    <div className="app-shell">
+      <NavBar authenticated={authenticated} />
+      <main className="app-main">
+        <Routes>
+          <Route path="/login" element={<LoginPage authenticated={authenticated} />} />
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAuth authenticated={authenticated}>
+                <DashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/playlists/:id"
+            element={
+              <RequireAuth authenticated={authenticated}>
+                <PlaylistDetailPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/analysis"
+            element={
+              <RequireAuth authenticated={authenticated}>
+                <AnalysisPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/plan"
+            element={
+              <RequireAuth authenticated={authenticated}>
+                <PlanBuilderPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <RequireAuth authenticated={authenticated}>
+                <HistoryPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="*" element={<Navigate to={authenticated ? '/dashboard' : '/login'} replace />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
