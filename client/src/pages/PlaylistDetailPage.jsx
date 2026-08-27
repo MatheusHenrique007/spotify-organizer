@@ -15,6 +15,16 @@ function formatDuration(ms) {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+function formatTotalDuration(tracks) {
+  const knownDurations = tracks.map((item) => item.item?.duration_ms).filter((ms) => typeof ms === 'number');
+  if (knownDurations.length === 0) return null;
+  const totalMs = knownDurations.reduce((sum, ms) => sum + ms, 0);
+  const totalMinutes = Math.round(totalMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`;
+}
+
 export default function PlaylistDetailPage() {
   const { id } = useParams();
   const [playlist, setPlaylist] = useState(null);
@@ -39,6 +49,8 @@ export default function PlaylistDetailPage() {
   if (!tracks) return <LoadingSpinner label="Carregando faixas..." />;
 
   const cover = playlist?.images?.[0]?.url;
+  const totalDuration = formatTotalDuration(tracks);
+  const trackDigits = String(tracks.length).length;
 
   return (
     <>
@@ -55,6 +67,7 @@ export default function PlaylistDetailPage() {
           {playlist?.description && <p>{playlist.description}</p>}
           <p>
             {tracks.length} {tracks.length === 1 ? 'música' : 'músicas'}
+            {totalDuration && ` • ${totalDuration}`}
           </p>
         </div>
       </div>
@@ -65,7 +78,7 @@ export default function PlaylistDetailPage() {
         <div className="track-list card">
           {tracks.map((item, index) => (
             <div className="track-row" key={`${item.item?.id || 'unknown'}-${index}`}>
-              <span className="track-index">{index + 1}</span>
+              <span className="track-index">{String(index + 1).padStart(trackDigits, '0')}</span>
               <div className="track-name">
                 <strong>{item.item?.name || 'Unavailable'}</strong>
                 <span>{item.item?.artists?.map((artist) => artist.name).join(', ')}</span>

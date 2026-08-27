@@ -135,13 +135,15 @@ export default function PlanBuilderPage() {
         <WorkflowSteps phase={phase} />
         <div className="card">
           <h2>Resultado da execução</h2>
-          {results.map((result) => (
-            <OperationCard key={result.operationId} operation={result}>
-              <StatusBadge status={result.success ? 'success' : 'error'}>
-                {result.success ? 'Concluído' : `Falhou: ${result.error}`}
-              </StatusBadge>
-            </OperationCard>
-          ))}
+          <div className="operation-grid">
+            {results.map((result) => (
+              <OperationCard key={result.operationId} operation={result}>
+                <StatusBadge status={result.success ? 'success' : 'error'}>
+                  {result.success ? 'Concluído' : `Falhou: ${result.error}`}
+                </StatusBadge>
+              </OperationCard>
+            ))}
+          </div>
         </div>
       </>
     );
@@ -163,41 +165,44 @@ export default function PlanBuilderPage() {
           <h2>Revisar plano</h2>
           <p className="muted">Selecione quais operações aplicar e confirme.</p>
 
-          {plan.operations.map((operation) => (
-            <OperationCard
-              key={operation.id}
-              operation={operation}
-              checked={selectedIds.has(operation.id)}
-              onToggle={() => toggleOperation(operation.id)}
-            >
-              {isDedupeWarningVisible(operation.type) && (
-                <div className="warning-banner">
-                  <WarningIcon size={16} aria-hidden="true" />
-                  <span>
-                    Esta operação pode remover todas as ocorrências da faixa, não apenas as duplicadas. Verifique o
-                    resultado no histórico após a execução.
-                  </span>
-                </div>
-              )}
-              <TechnicalDetails data={operation.params} />
-              {operation.type === 'rename_playlist' && (
-                <div className="rename-edit">
-                  <label>
-                    Novo nome:{' '}
-                    <input
-                      type="text"
-                      value={renameEdits[operation.id] ?? operation.params.newName}
-                      onChange={(event) => updateRenameEdit(operation.id, event.target.value)}
-                    />
-                  </label>
-                </div>
-              )}
-            </OperationCard>
-          ))}
+          <div className="operation-grid">
+            {plan.operations.map((operation) => (
+              <OperationCard
+                key={operation.id}
+                operation={operation}
+                checked={selectedIds.has(operation.id)}
+                onToggle={() => toggleOperation(operation.id)}
+              >
+                {isDedupeWarningVisible(operation.type) && (
+                  <div className="warning-banner">
+                    <WarningIcon size={16} aria-hidden="true" />
+                    <span>
+                      Esta operação pode remover todas as ocorrências da faixa, não apenas as duplicadas. Verifique
+                      o resultado no histórico após a execução.
+                    </span>
+                  </div>
+                )}
+                <TechnicalDetails data={operation.params} />
+                {operation.type === 'rename_playlist' && (
+                  <div className="rename-edit">
+                    <label>
+                      Novo nome:{' '}
+                      <input
+                        type="text"
+                        value={renameEdits[operation.id] ?? operation.params.newName}
+                        onChange={(event) => updateRenameEdit(operation.id, event.target.value)}
+                      />
+                    </label>
+                  </div>
+                )}
+              </OperationCard>
+            ))}
+          </div>
 
           <button
             type="button"
             className="button"
+            style={{ marginTop: 'var(--space-4)' }}
             disabled={selectedIds.size === 0 || phase === 'executing'}
             onClick={handleExecute}
           >

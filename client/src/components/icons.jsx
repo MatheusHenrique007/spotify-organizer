@@ -41,6 +41,14 @@ export function PlanIcon(props) {
   );
 }
 
+export function AnalysisIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M4 20V10M12 20V4M20 20v-7" />
+    </Svg>
+  );
+}
+
 export function HistoryIcon(props) {
   return (
     <Svg {...props}>

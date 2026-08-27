@@ -1,10 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { PlaylistIcon, PlanIcon, HistoryIcon, LogOutIcon, RefreshIcon } from './icons.jsx';
+import { PlaylistIcon, PlanIcon, HistoryIcon, LogOutIcon, AnalysisIcon } from './icons.jsx';
 
 const LINKS = [
   { to: '/dashboard', label: 'Playlists', icon: PlaylistIcon },
-  { to: '/analysis', label: 'Analysis', icon: RefreshIcon },
+  { to: '/analysis', label: 'Analysis', icon: AnalysisIcon },
   { to: '/plan', label: 'Plan Builder', icon: PlanIcon },
   { to: '/history', label: 'History', icon: HistoryIcon }
 ];
@@ -28,6 +28,7 @@ export default function Sidebar({ authenticated }) {
         Spotify Organizer
       </Link>
 
+      <div className="sidebar-section-label">Main</div>
       <div className="sidebar-nav">
         {LINKS.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
