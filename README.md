@@ -1,65 +1,85 @@
-# Spotify Playlist Organizer
+# Spotify Organizer
 
-A local, personal-use web app to analyze and reorganize your Spotify playlists: find duplicates, near-duplicate
-tracks, similar/mergeable playlists, and small or abandoned playlists, then build and apply a reviewed change plan
-directly against the Spotify Web API.
+A web app for organizing Spotify playlists through a plan → review → execute workflow, with verified,
+auditable writes instead of fire-and-forget API calls.
+
+Most "Spotify tools" either read-only inspect your library or blindly fire mutation requests and hope for the
+best. This one treats playlist mutations as something worth being careful about: every destructive change goes
+through an explicit plan the user reviews before anything is sent, and the two operations that delete tracks
+verify against Spotify's real state afterward instead of trusting the HTTP response alone — because, in testing,
+that response turned out to lie in a specific, reproducible case (see [Reliability strategy](#reliability-strategy-for-destructive-operations)
+below).
 
 No database, no cloud infrastructure, no external AI. Runs entirely on your machine.
 
+## What it does
+
+- Lists your Spotify playlists and lets you browse a playlist's full track list (name, artist, duration).
+- Runs a deterministic analysis pass over your library: exact and near-duplicate tracks, playlists similar
+  enough to be merge candidates, and small/abandoned playlists.
+- Turns that analysis into a **plan** — a list of concrete operations (rename, dedupe, add/remove tracks, etc.)
+  the user can select, edit, and review before anything touches Spotify.
+- Executes the selected operations against the real Spotify Web API, with a stricter, verify-then-retry path
+  for the two operations known to be able to silently no-op (`remove_tracks`, `dedupe_tracks`).
+- Logs every executed plan locally with per-operation results, so failures and retries are diagnosable after
+  the fact instead of disappearing into a toast notification.
+
 ## Features
 
-- Spotify OAuth 2.0 Authorization Code Flow with PKCE (no client secret required).
-- Tokens stored in a local JSON file, encrypted at rest (AES-256-GCM, key derived via scrypt from a secret in `.env`).
-- Automatic access token refresh; logout clears local tokens.
-- Dashboard: profile, playlists, track counts.
-- Deterministic analysis engine (no external AI/ML):
-  - Exact duplicate detection (by Spotify track ID).
-  - Fuzzy duplicate detection (normalized title + primary artist).
-  - Playlist similarity via Jaccard index on track sets, artist sets, and genre sets.
-  - Small/abandoned playlist detection (track count threshold + best-effort recency from track `added_at`).
-  - Deterministic rename/description suggestions from top artists/genres, and merge candidates from similarity scores.
-- Change plan system: build a plan of operations, choose which to apply (including inline editing of a suggested
-  playlist rename before applying), review, confirm, execute. Editing stays in local UI state and never triggers a
-  network call — the edited value is only merged into the plan at execution time. The Apply button is the single
-  place that triggers writes, and it disables itself while an execution is in flight.
-- Custom cover image upload (base64 JPEG) via the Spotify API.
-- Local history/audit log with best-effort restore data.
-- Robust error handling: 401 triggers a token refresh + retry. For 429, a `Retry-After` of 60 seconds or less gets a
-  limited retry (up to 3 attempts total); anything longer fails immediately with a controlled error instead of
-  blocking the request — `retryAfterSeconds` is attached to the error so the caller knows roughly how long the
-  limit lasts. A per-artist genre lookup failure (e.g. rate limiting) does not abort the whole analysis: the failing
-  artist IDs are collected and reported (`failedArtistIds`, `genreLookupFailures`), while duplicates, small/abandoned
-  playlist detection, and the rest of the analysis still complete normally.
-- Artist genre lookups are cached to disk (`server/data/artist-genre-cache.json`, 7-day TTL) so repeated analyses
-  don't re-fetch genres for artists already looked up. The cache only stores `{ genres, fetchedAt }` per artist ID —
-  no tokens or credentials.
+- Spotify OAuth 2.0 Authorization Code Flow with PKCE (no client secret required)
+- Playlist browsing with real cover art, track counts, and per-track duration
+- Deterministic analysis: exact/fuzzy duplicate detection, playlist similarity, small/abandoned playlist flags
+- Plan builder: select which suggested operations to apply, edit a suggested rename inline, review before executing
+- 9 operation types executed against the real Spotify Web API (see [table below](#operations-supported-by-the-executor))
+- Verify-then-retry strategy for the two operations that can silently fail (see below)
+- Local execution history with per-operation results and, where available, retry/verification details
+- Token encryption at rest, automatic refresh, no client secret stored
+- Loading, empty, and error states with retry — no raw stack traces shown to the user
+- Responsive layout, from 375px mobile up
 
-## Architecture & Stack
+## Tech Stack
 
-- **Backend**: Node.js + Express (ESM). No database — local JSON files under `server/data/` for tokens and
-  history.
-- **Frontend**: React 18 + Vite, React Router. Plain CSS with design tokens (custom properties), no CSS
-  framework. Responsive down to 375px.
-- **Tests**: Vitest on both server and client — see Testing below.
+**Frontend** — React 18, React Router, Vite. Plain CSS with a small custom design-token system; no CSS
+framework, no component library, no icon library (icons are inline SVG).
+
+**Backend** — Node.js, Express (ESM). No database; local JSON files for tokens and history.
+
+**Spotify** — Spotify Web API (OAuth 2.0 / PKCE, playlists, tracks, images).
+
+**Testing** — Vitest on both server and client. 103 tests total (see [Testing](#testing)).
+
+**Tooling** — npm workspaces, Git.
+
+## Architecture
 
 ```
-spotify-organizer/
-  server/
-    src/
-      lib/           # config, crypto, token/history storage, Spotify client, genre cache,
-                     # analysis engine, planner, executor
-      middleware/     # auth guard, error handler
-      routes/         # auth, me, playlists, analysis, plans, history
-      data/           # tokens.json / history.json / artist-genre-cache.json (gitignored, created at runtime)
-    test/             # Vitest unit tests
-  client/
-    src/
-      components/     # AppShell, Sidebar, PageHeader, PlaylistCard, OperationCard, StatusBadge,
-                     # EmptyState, ErrorState, TechnicalDetails, LoadingSpinner, icons
-      pages/          # Login, Dashboard, PlaylistDetail, Analysis, PlanBuilder, History
-      lib/            # api.js (backend fetch wrapper), plan editing and presentation helpers
-    test/             # Vitest unit tests (pure logic, no DOM rendering)
+Browser (React client)
+        │
+        │  fetch — client/src/lib/api.js
+        ▼
+Express server  ── auth / playlists / analysis / plans / history routes
+        │
+        ├── analysis engine   (duplicates, similarity, small/abandoned detection)
+        ├── planner           (suggestions → concrete operations)
+        ├── executor           (runs one operation type at a time)
+        │       │
+        │       └── verify-then-retry strategy for remove_tracks / dedupe_tracks
+        │
+        ├── history store     (local JSON log of every executed plan)
+        │
+        ▼
+Spotify Web API
 ```
+
+The client never calls Spotify directly — every request goes through the Express server, which holds the
+encrypted tokens. The executor is the only code path that writes to Spotify; there's no other route in the app
+that mutates a playlist.
+
+## Screenshots
+
+Not included in this repository. The application was validated visually against a real, authenticated Spotify
+account during development (see commit history), but no screenshot files were saved to disk as part of that
+process, so none are published here rather than substituting a mockup.
 
 ## Requirements
 
@@ -74,6 +94,14 @@ spotify-organizer/
 4. Required scopes are requested automatically by the app: `playlist-read-private`,
    `playlist-read-collaborative`, `playlist-modify-public`, `playlist-modify-private`, `ugc-image-upload`,
    `user-read-private`, `user-read-email`.
+
+## Installation
+
+```
+npm run install:all
+```
+
+This installs dependencies for the root, `server/`, and `client/` npm workspaces.
 
 ## Configuration
 
@@ -96,14 +124,6 @@ CLIENT_URL=http://127.0.0.1:5173
 | `CLIENT_URL` | no (default `http://127.0.0.1:5173`) | Frontend origin, used for CORS and post-auth redirects. |
 | `DRY_RUN` | no (default `false`) | When `true`, write operations to Spotify are short-circuited — no request is actually sent. Useful for exercising the plan/execute flow without touching real playlists. |
 
-## Installation
-
-```
-npm run install:all
-```
-
-This installs dependencies for the root, `server/`, and `client/` npm workspaces.
-
 ## Running
 
 ```
@@ -124,11 +144,16 @@ npm test
 This runs the server suite followed by the client suite. To run either one on its own:
 `npm run test --workspace server` or `npm run test --workspace client`.
 
-Current suite: **server 85 tests, client 18 tests — 103 total**, all passing. Server tests cover the analysis
-engine (duplicate detection, similarity scoring, small/abandoned playlist detection), the operations planner, the
-Spotify client (retry/rate-limit/token-refresh behavior), and the executor (all 9 operation types, including the
-retry/verification strategy below), all against a mocked Spotify API. Client tests cover pure presentation logic
-(plan editing, operation labels, history detail formatting) — no DOM rendering library is used.
+Current suite: **server 85 tests, client 18 tests — 103 total**, all passing, all against real application
+behavior (no placeholder/smoke-only tests). Server tests cover the analysis engine (duplicate detection,
+similarity scoring, small/abandoned playlist detection), the operations planner, the Spotify client
+(retry/rate-limit/token-refresh behavior), and the executor (all 9 operation types, including the
+retry/verification strategy below) — all against a mocked Spotify API, so this suite is unit-level, not
+integration-level. Separately from the automated suite, several operations (including the ones described in
+Known Limitations) were also validated with real calls against a live, authenticated Spotify account during
+development; that validation isn't repeatable in CI and isn't counted in the 103 figure. Client tests cover
+pure presentation logic (plan editing, operation labels, history detail formatting) — no DOM rendering library
+is used.
 
 ## Reliability strategy for destructive operations
 
