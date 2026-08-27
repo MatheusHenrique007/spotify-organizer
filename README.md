@@ -144,18 +144,27 @@ does not fix or explain its root cause.
 These are open technical debts, documented rather than hidden:
 
 1. **`dedupe_tracks` can remove more than intended.** The suggestion logic is built to keep the first occurrence of
-   a duplicated track and remove only the extras, but a real test against the Spotify API (`DELETE` with
-   `positions`) showed all occurrences being removed instead of just the targeted ones. The plan review screen
-   shows an explicit warning on this operation until it's resolved.
-2. The exact root cause of the Spotify-side snapshot inconsistency described above hasn't been determined — only
-   its effect is known and handled.
+   a duplicated track and remove only the extras, but a real test against the Spotify API (`DELETE .../items` with
+   `positions`) showed all occurrences being removed instead of just the targeted ones. Checking Spotify's current
+   API reference confirms why: the non-deprecated `Remove Playlist Items` endpoint (the one this app uses) documents
+   only `items` (URIs) and `snapshot_id` in its request body — `positions` is not part of its schema. `positions`
+   only appears in the documentation of the older, deprecated remove-tracks endpoint. Since this app deliberately
+   avoids deprecated endpoints, there is currently no officially documented way, on the endpoint this app uses, to
+   remove only specific occurrences of a duplicated URI. The plan review screen shows an explicit warning on this
+   operation, and it stays that way until Spotify's current API exposes a supported way to do this.
+2. The exact root cause of the Spotify-side snapshot staleness described above hasn't been determined — only its
+   effect is known and handled by the retry/verification strategy.
 3. **`reorder_tracks` has no retry/verification strategy.** It was validated in the real scenarios tested (including
    immediately after an `add_tracks` call, to stress a freshly changed snapshot) with no failures, but that's not
    proof it's immune to the same class of issue — it just has no observed failure to justify adding the extra
    complexity yet.
-4. **`change_cover_image`** has not been exercised against the real API in this project (no test image used).
-5. **`rename_playlist` and `change_description`** have real-world coverage mostly for the success path, not for
-   failure scenarios.
+4. **`change_cover_image`**: the error path was verified against the real API (an invalid image is rejected by
+   Spotify with a clear error, correctly surfaced and logged, not swallowed). The success path (a real image
+   actually being accepted and applied) has not been exercised in this project — no suitable real image file was
+   available to test with.
+5. **`rename_playlist` and `change_description`**: both the success path and a real failure path (invalid playlist
+   ID → Spotify's 404, correctly surfaced as `Resource not found` and logged) have been verified against the real
+   API.
 
 ## History and observability
 
