@@ -38,7 +38,8 @@ No database, no cloud infrastructure, no external AI. Runs entirely on your mach
 
 - **Backend**: Node.js + Express (ESM). No database — local JSON files under `server/data/` for tokens and
   history.
-- **Frontend**: React 18 + Vite, React Router. Plain CSS, responsive down to ~768px.
+- **Frontend**: React 18 + Vite, React Router. Plain CSS with design tokens (custom properties), no CSS
+  framework. Responsive down to 375px.
 - **Tests**: Vitest on both server and client — see Testing below.
 
 ```
@@ -53,7 +54,8 @@ spotify-organizer/
     test/             # Vitest unit tests
   client/
     src/
-      components/     # NavBar, ErrorBanner, LoadingSpinner
+      components/     # AppShell, Sidebar, PageHeader, PlaylistCard, OperationCard, StatusBadge,
+                     # EmptyState, ErrorState, TechnicalDetails, LoadingSpinner, icons
       pages/          # Login, Dashboard, PlaylistDetail, Analysis, PlanBuilder, History
       lib/            # api.js (backend fetch wrapper), plan editing and presentation helpers
     test/             # Vitest unit tests (pure logic, no DOM rendering)
@@ -251,6 +253,11 @@ restore action built on top of it.
 
 Ready for personal use and portfolio review, with known technical debts documented above. Not "production-ready"
 in the sense of multi-user or public deployment — see Security Notes.
+
+## License
+
+No license file is included in this repository. All rights reserved by default under copyright law unless a
+license is added.
 
 ## Manual Step Required
 
