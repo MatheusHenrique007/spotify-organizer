@@ -85,6 +85,15 @@ PORT=8888
 CLIENT_URL=http://127.0.0.1:5173
 ```
 
+| Variable | Required | Purpose |
+|---|---|---|
+| `SPOTIFY_CLIENT_ID` | yes | Client ID from your Spotify Developer Dashboard app. |
+| `SPOTIFY_REDIRECT_URI` | yes | Must exactly match a Redirect URI registered on the Spotify app. |
+| `TOKEN_ENCRYPTION_KEY` | yes | Passphrase used to derive the AES-256-GCM key that encrypts `tokens.json` at rest. |
+| `PORT` | no (default `8888`) | Backend server port. |
+| `CLIENT_URL` | no (default `http://127.0.0.1:5173`) | Frontend origin, used for CORS and post-auth redirects. |
+| `DRY_RUN` | no (default `false`) | When `true`, write operations to Spotify are short-circuited — no request is actually sent. Useful for exercising the plan/execute flow without touching real playlists. |
+
 ## Installation
 
 ```
