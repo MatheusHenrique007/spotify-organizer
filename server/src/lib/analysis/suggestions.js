@@ -9,8 +9,8 @@ export function buildRenameSuggestion(playlist, tracks, artistGenreMap) {
   const artistCounts = new Map();
   const genreCounts = new Map();
 
-  for (const item of tracks) {
-    const track = item.track;
+  for (const entry of tracks) {
+    const track = entry.item;
     if (!track) continue;
     for (const artist of track.artists || []) {
       artistCounts.set(artist.name, (artistCounts.get(artist.name) || 0) + 1);

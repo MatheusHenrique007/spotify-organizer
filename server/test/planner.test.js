@@ -4,7 +4,7 @@ import { executePlan } from '../src/lib/executor.js';
 
 vi.mock('../src/lib/spotifyClient.js', () => ({
   spotifyFetch: vi.fn(async (path, options) => {
-    if (path.includes('/tracks') && options?.method === 'DELETE') {
+    if (path.includes('/items') && options?.method === 'DELETE') {
       return { snapshot_id: 'snap1' };
     }
     return { id: 'ok' };

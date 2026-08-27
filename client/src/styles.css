@@ -147,6 +147,32 @@ body {
   margin-bottom: 1rem;
 }
 
+.status-success {
+  color: #1db954;
+  font-weight: bold;
+}
+
+.status-error {
+  color: #ffb3b3;
+  font-weight: bold;
+}
+
+.tech-details {
+  margin-top: 0.4rem;
+}
+
+.tech-details summary {
+  cursor: pointer;
+}
+
+.tech-json {
+  background: #0a0a0a;
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 768px) {
   .app-main {
     padding: 1rem;

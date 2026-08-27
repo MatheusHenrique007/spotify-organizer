@@ -41,7 +41,7 @@ describe('buildPlaylistProfile', () => {
   it('collects track ids, artist ids, and genres', () => {
     const playlist = { id: 'p1', name: 'Test' };
     const tracks = [
-      { track: { id: 't1', artists: [{ id: 'a1', name: 'Artist' }] } }
+      { item: { id: 't1', artists: [{ id: 'a1', name: 'Artist' }] } }
     ];
     const genreMap = new Map([['a1', ['rock']]]);
     const profile = buildPlaylistProfile(playlist, tracks, genreMap);

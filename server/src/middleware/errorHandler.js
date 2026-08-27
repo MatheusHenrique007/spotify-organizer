@@ -7,7 +7,8 @@ export function errorHandler(err, req, res, next) {
     return res.status(err.status || 502).json({
       error: 'spotify_api_error',
       message: err.message,
-      status: err.status
+      status: err.status,
+      ...(err.retryAfterSeconds !== undefined ? { retryAfterSeconds: err.retryAfterSeconds } : {})
     });
   }
 

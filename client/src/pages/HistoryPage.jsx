@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
+import { describeOperation } from '../lib/operationPresentation.js';
+import { describeExecutionDetails } from '../lib/historyPresentation.js';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 
@@ -30,11 +32,30 @@ export default function HistoryPage() {
           <li key={entry.id}>
             <strong>{new Date(entry.timestamp).toLocaleString()}</strong> — {entry.operationCount} operation(s)
             <ul>
-              {entry.results.map((result) => (
-                <li key={result.operationId}>
-                  {result.type}: {result.success ? 'success' : `failed (${result.error})`}
-                </li>
-              ))}
+              {entry.results.map((result) => {
+                const execution = describeExecutionDetails(result.details);
+                return (
+                  <li key={result.operationId}>
+                    <strong>{describeOperation(result).label}</strong>:{' '}
+                    <span className={result.success ? 'status-success' : 'status-error'}>
+                      {result.success ? 'success' : `failed (${result.error})`}
+                    </span>
+                    {execution && (
+                      <details className="tech-details">
+                        <summary className="muted">Detalhes da execução</summary>
+                        <ul className="muted">
+                          {execution.summary && <li>{execution.summary}</li>}
+                          {execution.verificationLabel && (
+                            <li className={execution.verificationClass}>{execution.verificationLabel}</li>
+                          )}
+                          {execution.snapshotsLabel && <li>{execution.snapshotsLabel}</li>}
+                          {execution.uriCount !== null && <li>Faixas afetadas: {execution.uriCount}</li>}
+                        </ul>
+                      </details>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </li>
         ))}

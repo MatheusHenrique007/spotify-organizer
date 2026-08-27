@@ -4,7 +4,7 @@ import { findDuplicates } from '../src/lib/analysis/duplicates.js';
 function trackItem(id, name, artist, addedAt = '2024-01-01T00:00:00Z') {
   return {
     added_at: addedAt,
-    track: { id, uri: `spotify:track:${id}`, name, artists: [{ id: `artist-${artist}`, name: artist }] }
+    item: { id, uri: `spotify:track:${id}`, name, artists: [{ id: `artist-${artist}`, name: artist }] }
   };
 }
 
@@ -35,7 +35,7 @@ describe('findDuplicates', () => {
   });
 
   it('ignores items with missing track data', () => {
-    const tracks = [{ added_at: '2024-01-01', track: null }, trackItem('1', 'Song A', 'Artist A')];
+    const tracks = [{ added_at: '2024-01-01', item: null }, trackItem('1', 'Song A', 'Artist A')];
     const { exactDuplicates } = findDuplicates(tracks);
     expect(exactDuplicates).toHaveLength(0);
   });

@@ -27,50 +27,47 @@ authRouter.get('/login', (req, res) => {
   res.redirect(`${config.spotify.authUrl}?${params.toString()}`);
 });
 
-authRouter.get(
-  '/callback',
-  asyncHandler(async (req, res) => {
-    const { code, state, error } = req.query;
+export const authCallbackHandler = asyncHandler(async (req, res) => {
+  const { code, state, error } = req.query;
 
-    if (error) {
-      return res.redirect(`${config.clientUrl}/login?error=${encodeURIComponent(error)}`);
-    }
+  if (error) {
+    return res.redirect(`${config.clientUrl}/login?error=${encodeURIComponent(error)}`);
+  }
 
-    if (!pendingAuth || state !== pendingAuth.state) {
-      return res.redirect(`${config.clientUrl}/login?error=invalid_state`);
-    }
+  if (!pendingAuth || state !== pendingAuth.state) {
+    return res.redirect(`${config.clientUrl}/login?error=invalid_state`);
+  }
 
-    const body = new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: config.spotify.redirectUri,
-      client_id: config.spotify.clientId,
-      code_verifier: pendingAuth.codeVerifier
-    });
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: config.spotify.redirectUri,
+    client_id: config.spotify.clientId,
+    code_verifier: pendingAuth.codeVerifier
+  });
 
-    const response = await fetch(config.spotify.tokenUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body
-    });
+  const response = await fetch(config.spotify.tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body
+  });
 
-    pendingAuth = null;
+  pendingAuth = null;
 
-    if (!response.ok) {
-      return res.redirect(`${config.clientUrl}/login?error=token_exchange_failed`);
-    }
+  if (!response.ok) {
+    return res.redirect(`${config.clientUrl}/login?error=token_exchange_failed`);
+  }
 
-    const data = await response.json();
-    saveTokens({
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-      expiresAt: Date.now() + data.expires_in * 1000,
-      scope: data.scope
-    });
+  const data = await response.json();
+  saveTokens({
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresAt: Date.now() + data.expires_in * 1000,
+    scope: data.scope
+  });
 
-    res.redirect(`${config.clientUrl}/dashboard`);
-  })
-);
+  res.redirect(`${config.clientUrl}/dashboard`);
+});
 
 authRouter.get('/status', (req, res) => {
   const tokens = loadTokens();

@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { spotifyFetch } from '../lib/spotifyClient.js';
 import { getAllPlaylists, getPlaylistTracks } from '../lib/playlistData.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { requireAuth } from '../middleware/requireAuth.js';
@@ -31,35 +30,5 @@ playlistsRouter.get(
   asyncHandler(async (req, res) => {
     const tracks = await getPlaylistTracks(req.params.id);
     res.json({ tracks });
-  })
-);
-
-playlistsRouter.put(
-  '/:id',
-  requireAuth,
-  asyncHandler(async (req, res) => {
-    const { name, description } = req.body;
-    await spotifyFetch(`/playlists/${req.params.id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ name, description })
-    });
-    res.json({ success: true });
-  })
-);
-
-playlistsRouter.put(
-  '/:id/image',
-  requireAuth,
-  asyncHandler(async (req, res) => {
-    const { base64Jpeg } = req.body;
-    if (!base64Jpeg) {
-      return res.status(400).json({ error: 'missing_image', message: 'base64Jpeg is required' });
-    }
-    await spotifyFetch(`/playlists/${req.params.id}/images`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'image/jpeg' },
-      body: base64Jpeg
-    });
-    res.json({ success: true });
   })
 );

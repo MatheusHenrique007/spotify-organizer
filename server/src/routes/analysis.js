@@ -19,9 +19,9 @@ analysisRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const playlists = await getAllPlaylists();
-    const tracksByPlaylistId = await loadPlaylistsWithTracks(playlists);
+    const { tracksByPlaylistId, inaccessiblePlaylistIds } = await loadPlaylistsWithTracks(playlists);
     const artistIds = collectAllArtistIds(tracksByPlaylistId);
-    const artistGenreMap = await getArtistGenreMap(artistIds);
+    const { genreMap: artistGenreMap, failedArtistIds } = await getArtistGenreMap(artistIds);
 
     const duplicatesByPlaylist = {};
     const renameSuggestions = [];
@@ -49,7 +49,17 @@ analysisRouter.get(
       renameSuggestions,
       limitations: {
         recency:
-          'Spotify API has no true playlist-level "last modified" field. Staleness is estimated from the most recent track added_at timestamp, which is unavailable or unreliable for some playlists (e.g. collaborative playlists with missing metadata).'
+          'Spotify API has no true playlist-level "last modified" field. Staleness is estimated from the most recent track added_at timestamp, which is unavailable or unreliable for some playlists (e.g. collaborative playlists with missing metadata).',
+        inaccessiblePlaylists:
+          inaccessiblePlaylistIds.length > 0
+            ? `${inaccessiblePlaylistIds.length} playlist(s) not owned by the current user could not be read (Spotify returned 403 for their track items) and were excluded from analysis.`
+            : null,
+        inaccessiblePlaylistIds,
+        genreLookupFailures:
+          failedArtistIds.length > 0
+            ? `${failedArtistIds.length} artist(s) could not be looked up (Spotify error, e.g. rate limit) and were excluded from genre-based suggestions. The rest of the analysis still ran normally.`
+            : null,
+        failedArtistIds
       }
     });
   })

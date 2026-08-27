@@ -32,9 +32,9 @@ export default function PlaylistDetailPage() {
         </thead>
         <tbody>
           {tracks.map((item, index) => (
-            <tr key={`${item.track?.id || 'unknown'}-${index}`}>
-              <td>{item.track?.name || 'Unavailable'}</td>
-              <td>{item.track?.artists?.map((artist) => artist.name).join(', ')}</td>
+            <tr key={`${item.item?.id || 'unknown'}-${index}`}>
+              <td>{item.item?.name || 'Unavailable'}</td>
+              <td>{item.item?.artists?.map((artist) => artist.name).join(', ')}</td>
               <td>{item.added_at ? new Date(item.added_at).toLocaleDateString() : '—'}</td>
             </tr>
           ))}

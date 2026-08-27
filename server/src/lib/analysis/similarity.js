@@ -40,8 +40,8 @@ export function buildPlaylistProfile(playlist, tracks, artistGenreMap) {
   const artistIds = new Set();
   const genres = new Set();
 
-  for (const item of tracks) {
-    const track = item.track;
+  for (const entry of tracks) {
+    const track = entry.item;
     if (!track) continue;
     if (track.id) trackIds.add(track.id);
     for (const artist of track.artists || []) {

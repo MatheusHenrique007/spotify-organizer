@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { config } from './lib/config.js';
-import { authRouter } from './routes/auth.js';
+import { authRouter, authCallbackHandler } from './routes/auth.js';
 import { meRouter } from './routes/me.js';
 import { playlistsRouter } from './routes/playlists.js';
 import { analysisRouter } from './routes/analysis.js';
@@ -17,6 +17,7 @@ export function createApp() {
 
   app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+  app.get('/callback', authCallbackHandler);
   app.use('/api/auth', authRouter);
   app.use('/api/me', meRouter);
   app.use('/api/playlists', playlistsRouter);

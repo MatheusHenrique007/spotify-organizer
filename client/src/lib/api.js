@@ -34,9 +34,6 @@ export const api = {
   getMe: () => request('/me'),
   getPlaylists: () => request('/playlists'),
   getPlaylistTracks: (id) => request(`/playlists/${id}/tracks`),
-  updatePlaylist: (id, body) => request(`/playlists/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
-  updatePlaylistImage: (id, base64Jpeg) =>
-    request(`/playlists/${id}/image`, { method: 'PUT', body: JSON.stringify({ base64Jpeg }) }),
   getAnalysis: () => request('/analysis'),
   buildPlan: (body) => request('/plans/build', { method: 'POST', body: JSON.stringify(body) }),
   executePlan: (body) => request('/plans/execute', { method: 'POST', body: JSON.stringify(body) }),

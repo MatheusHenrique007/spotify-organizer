@@ -7,6 +7,7 @@ const OPERATION_TYPES = [
   'add_tracks',
   'remove_tracks',
   'reorder_tracks',
+  'replace_tracks',
   'dedupe_tracks',
   'change_cover_image'
 ];
