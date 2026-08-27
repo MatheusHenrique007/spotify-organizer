@@ -4,9 +4,9 @@ import { PlaylistIcon, PlanIcon, HistoryIcon, LogOutIcon, AnalysisIcon } from '.
 
 const LINKS = [
   { to: '/dashboard', label: 'Playlists', icon: PlaylistIcon },
-  { to: '/analysis', label: 'Analysis', icon: AnalysisIcon },
-  { to: '/plan', label: 'Plan Builder', icon: PlanIcon },
-  { to: '/history', label: 'History', icon: HistoryIcon }
+  { to: '/analysis', label: 'Análise', icon: AnalysisIcon },
+  { to: '/plan', label: 'Plano', icon: PlanIcon },
+  { to: '/history', label: 'Histórico', icon: HistoryIcon }
 ];
 
 export default function Sidebar({ authenticated }) {
@@ -28,7 +28,7 @@ export default function Sidebar({ authenticated }) {
         Spotify Organizer
       </Link>
 
-      <div className="sidebar-section-label">Main</div>
+      <div className="sidebar-section-label">Principal</div>
       <div className="sidebar-nav">
         {LINKS.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
@@ -44,7 +44,7 @@ export default function Sidebar({ authenticated }) {
       <div className="sidebar-footer">
         <button type="button" onClick={handleLogout} className="sidebar-logout">
           <LogOutIcon aria-hidden="true" />
-          <span>Log out</span>
+          <span>Sair</span>
         </button>
       </div>
     </nav>

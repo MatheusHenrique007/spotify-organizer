@@ -28,11 +28,11 @@ function buildDedupeSuggestions(duplicatesByPlaylist) {
 }
 
 const STEPS = [
-  { key: 'analysis', label: 'Analysis' },
-  { key: 'plan', label: 'Plan' },
-  { key: 'review', label: 'Review' },
-  { key: 'executing', label: 'Execute' },
-  { key: 'done', label: 'Result' }
+  { key: 'analysis', label: 'Análise' },
+  { key: 'plan', label: 'Plano' },
+  { key: 'review', label: 'Revisão' },
+  { key: 'executing', label: 'Execução' },
+  { key: 'done', label: 'Resultado' }
 ];
 
 function WorkflowSteps({ phase }) {
@@ -110,7 +110,7 @@ export default function PlanBuilderPage() {
   if (phase === 'loading') {
     return (
       <>
-        <PageHeader title="Plan Builder" subtitle="Analise e execute alterações nas suas playlists." />
+        <PageHeader title="Plano" subtitle="Analise e execute alterações nas suas playlists." />
         <WorkflowSteps phase={phase} />
         <LoadingSpinner label="Analisando playlists e montando o plano..." />
       </>
@@ -120,7 +120,7 @@ export default function PlanBuilderPage() {
   if (phase === 'error') {
     return (
       <>
-        <PageHeader title="Plan Builder" subtitle="Analise e execute alterações nas suas playlists." />
+        <PageHeader title="Plano" subtitle="Analise e execute alterações nas suas playlists." />
         <ErrorState title="Não foi possível montar o plano" error={error} />
       </>
     );
@@ -131,7 +131,7 @@ export default function PlanBuilderPage() {
   if (phase === 'done') {
     return (
       <>
-        <PageHeader title="Plan Builder" subtitle="Analise e execute alterações nas suas playlists." />
+        <PageHeader title="Plano" subtitle="Analise e execute alterações nas suas playlists." />
         <WorkflowSteps phase={phase} />
         <div className="card">
           <h2>Resultado da execução</h2>
@@ -151,7 +151,7 @@ export default function PlanBuilderPage() {
 
   return (
     <>
-      <PageHeader title="Plan Builder" subtitle="Analise e execute alterações nas suas playlists." />
+      <PageHeader title="Plano" subtitle="Analise e execute alterações nas suas playlists." />
       <WorkflowSteps phase={phase} />
 
       {plan.operations.length === 0 ? (

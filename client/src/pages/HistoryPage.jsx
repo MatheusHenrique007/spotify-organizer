@@ -26,7 +26,7 @@ export default function HistoryPage() {
   if (error) {
     return (
       <>
-        <PageHeader title="History" />
+        <PageHeader title="Histórico" />
         <ErrorState title="Não foi possível carregar o histórico" error={error} onRetry={() => setAttempt((n) => n + 1)} />
       </>
     );
@@ -35,7 +35,7 @@ export default function HistoryPage() {
   if (!history) {
     return (
       <>
-        <PageHeader title="History" />
+        <PageHeader title="Histórico" />
         <LoadingSpinner label="Carregando histórico..." />
       </>
     );
@@ -44,7 +44,7 @@ export default function HistoryPage() {
   return (
     <>
       <PageHeader
-        title="History"
+        title="Histórico"
         subtitle="Restauração de melhor esforço é registrada por operação, mas desfazer completamente nem sempre é possível (ex.: playlists deletadas não podem ser recriadas com o mesmo ID)."
       />
 

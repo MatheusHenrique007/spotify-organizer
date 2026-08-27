@@ -12,7 +12,7 @@ export function PlaylistGridSkeleton({ count = 8 }) {
   );
 }
 
-export default function LoadingSpinner({ label = 'Loading...' }) {
+export default function LoadingSpinner({ label = 'Carregando...' }) {
   return (
     <div className="loading" role="status">
       {label}

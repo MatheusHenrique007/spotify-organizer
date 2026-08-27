@@ -18,7 +18,7 @@ export default function AnalysisPage() {
   if (error) {
     return (
       <>
-        <PageHeader title="Analysis" />
+        <PageHeader title="Análise" />
         <ErrorState title="Não foi possível analisar suas playlists" error={error} onRetry={() => setAttempt((n) => n + 1)} />
       </>
     );
@@ -27,7 +27,7 @@ export default function AnalysisPage() {
   if (!analysis) {
     return (
       <>
-        <PageHeader title="Analysis" />
+        <PageHeader title="Análise" />
         <LoadingSpinner label="Analisando playlists (isso pode levar um tempo)..." />
       </>
     );
@@ -39,7 +39,7 @@ export default function AnalysisPage() {
 
   return (
     <>
-      <PageHeader title="Analysis" subtitle={analysis.limitations.recency} />
+      <PageHeader title="Análise" subtitle={analysis.limitations.recency} />
 
       <div className="card">
         <h3>Duplicatas</h3>
