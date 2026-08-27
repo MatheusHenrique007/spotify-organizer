@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { applyOperationEdits } from '../lib/planEditing.js';
-import { describeOperation, isDedupeWarningVisible } from '../lib/operationPresentation.js';
+import { isDedupeWarningVisible } from '../lib/operationPresentation.js';
+import PageHeader from '../components/PageHeader.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
-import ErrorBanner from '../components/ErrorBanner.jsx';
+import ErrorState from '../components/ErrorState.jsx';
+import EmptyState from '../components/EmptyState.jsx';
+import OperationCard from '../components/OperationCard.jsx';
+import StatusBadge from '../components/StatusBadge.jsx';
+import TechnicalDetails from '../components/TechnicalDetails.jsx';
+import { PlanIcon, WarningIcon } from '../components/icons.jsx';
 
 export { isDedupeWarningVisible };
 
@@ -21,8 +27,32 @@ function buildDedupeSuggestions(duplicatesByPlaylist) {
   return suggestions;
 }
 
+const STEPS = [
+  { key: 'analysis', label: 'Analysis' },
+  { key: 'plan', label: 'Plan' },
+  { key: 'review', label: 'Review' },
+  { key: 'executing', label: 'Execute' },
+  { key: 'done', label: 'Result' }
+];
+
+function WorkflowSteps({ phase }) {
+  const activeIndex = phase === 'loading' ? 0 : STEPS.findIndex((step) => step.key === phase);
+  return (
+    <div className="workflow-steps">
+      {STEPS.map((step, index) => {
+        const state = index < activeIndex ? 'is-done' : index === activeIndex ? 'is-active' : '';
+        return (
+          <span key={step.key} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span className={`workflow-step ${state}`}>{step.label}</span>
+            {index < STEPS.length - 1 && <span className="workflow-arrow">→</span>}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function PlanBuilderPage() {
-  const [analysis, setAnalysis] = useState(null);
   const [plan, setPlan] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [renameEdits, setRenameEdits] = useState({});
@@ -33,14 +63,13 @@ export default function PlanBuilderPage() {
   useEffect(() => {
     api
       .getAnalysis()
-      .then((data) => {
-        setAnalysis(data);
-        return api.buildPlan({
+      .then((data) =>
+        api.buildPlan({
           renameSuggestions: data.renameSuggestions,
           dedupeSuggestions: buildDedupeSuggestions(data.duplicatesByPlaylist),
           mergeCandidates: data.mergeCandidates
-        });
-      })
+        })
+      )
       .then((data) => {
         setPlan(data.plan);
         setSelectedIds(new Set(data.plan.operations.map((operation) => operation.id)));
@@ -78,81 +107,104 @@ export default function PlanBuilderPage() {
     }
   }
 
-  if (phase === 'loading') return <LoadingSpinner label="Building plan..." />;
-  if (phase === 'error') return <ErrorBanner error={error} />;
+  if (phase === 'loading') {
+    return (
+      <>
+        <PageHeader title="Plan Builder" subtitle="Analise e execute alterações nas suas playlists." />
+        <WorkflowSteps phase={phase} />
+        <LoadingSpinner label="Analisando playlists e montando o plano..." />
+      </>
+    );
+  }
+
+  if (phase === 'error') {
+    return (
+      <>
+        <PageHeader title="Plan Builder" subtitle="Analise e execute alterações nas suas playlists." />
+        <ErrorState title="Não foi possível montar o plano" error={error} />
+      </>
+    );
+  }
+
   if (!plan) return null;
 
   if (phase === 'done') {
     return (
-      <div className="card">
-        <h2>Execution Results</h2>
-        <ul>
+      <>
+        <PageHeader title="Plan Builder" subtitle="Analise e execute alterações nas suas playlists." />
+        <WorkflowSteps phase={phase} />
+        <div className="card">
+          <h2>Resultado da execução</h2>
           {results.map((result) => (
-            <li key={result.operationId}>
-              <strong>{describeOperation(result).label}</strong> —{' '}
-              <span className={result.success ? 'status-success' : 'status-error'}>
-                {result.success ? 'Success' : `Failed: ${result.error}`}
-              </span>
-            </li>
+            <OperationCard key={result.operationId} operation={result}>
+              <StatusBadge status={result.success ? 'success' : 'error'}>
+                {result.success ? 'Concluído' : `Falhou: ${result.error}`}
+              </StatusBadge>
+            </OperationCard>
           ))}
-        </ul>
-      </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="card">
-      <h2>Review Plan</h2>
-      <p className="muted">Select which operations to apply, then confirm.</p>
-      <ul className="plan-list">
-        {plan.operations.map((operation) => {
-          const { label, description } = describeOperation(operation);
-          return (
-          <li key={operation.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selectedIds.has(operation.id)}
-                onChange={() => toggleOperation(operation.id)}
-              />
-              <strong>{label}</strong>
-              {description && <span className="muted"> — {description}</span>}
-            </label>
-            {isDedupeWarningVisible(operation.type) && (
-              <div className="error-banner">
-                Warning: this operation may remove all occurrences of the track, not only the
-                duplicates. Check the result in History after applying.
-              </div>
-            )}
-            <details className="tech-details">
-              <summary className="muted">Ver detalhes técnicos</summary>
-              <pre className="tech-json">{JSON.stringify(operation.params, null, 2)}</pre>
-            </details>
-            {operation.type === 'rename_playlist' && (
-              <div className="rename-edit">
-                <label>
-                  New name:{' '}
-                  <input
-                    type="text"
-                    value={renameEdits[operation.id] ?? operation.params.newName}
-                    onChange={(event) => updateRenameEdit(operation.id, event.target.value)}
-                  />
-                </label>
-              </div>
-            )}
-          </li>
-          );
-        })}
-      </ul>
-      {plan.operations.length === 0 && <p>No operations suggested.</p>}
-      <button
-        type="button"
-        className="button"
-        disabled={selectedIds.size === 0 || phase === 'executing'}
-        onClick={handleExecute}
-      >
-        {phase === 'executing' ? 'Executing...' : `Apply ${selectedIds.size} operation(s)`}
-      </button>
-    </div>
+    <>
+      <PageHeader title="Plan Builder" subtitle="Analise e execute alterações nas suas playlists." />
+      <WorkflowSteps phase={phase} />
+
+      {plan.operations.length === 0 ? (
+        <EmptyState
+          icon={PlanIcon}
+          title="Nenhuma operação sugerida"
+          description="A análise não encontrou alterações para sugerir no momento."
+        />
+      ) : (
+        <div className="card">
+          <h2>Revisar plano</h2>
+          <p className="muted">Selecione quais operações aplicar e confirme.</p>
+
+          {plan.operations.map((operation) => (
+            <OperationCard
+              key={operation.id}
+              operation={operation}
+              checked={selectedIds.has(operation.id)}
+              onToggle={() => toggleOperation(operation.id)}
+            >
+              {isDedupeWarningVisible(operation.type) && (
+                <div className="warning-banner">
+                  <WarningIcon size={16} aria-hidden="true" />
+                  <span>
+                    Esta operação pode remover todas as ocorrências da faixa, não apenas as duplicadas. Verifique o
+                    resultado no histórico após a execução.
+                  </span>
+                </div>
+              )}
+              <TechnicalDetails data={operation.params} />
+              {operation.type === 'rename_playlist' && (
+                <div className="rename-edit">
+                  <label>
+                    Novo nome:{' '}
+                    <input
+                      type="text"
+                      value={renameEdits[operation.id] ?? operation.params.newName}
+                      onChange={(event) => updateRenameEdit(operation.id, event.target.value)}
+                    />
+                  </label>
+                </div>
+              )}
+            </OperationCard>
+          ))}
+
+          <button
+            type="button"
+            className="button"
+            disabled={selectedIds.size === 0 || phase === 'executing'}
+            onClick={handleExecute}
+          >
+            {phase === 'executing' ? 'Executando...' : `Aplicar ${selectedIds.size} operação(ões)`}
+          </button>
+        </div>
+      )}
+    </>
   );
 }

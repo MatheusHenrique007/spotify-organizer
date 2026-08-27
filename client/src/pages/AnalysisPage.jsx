@@ -1,46 +1,61 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
+import PageHeader from '../components/PageHeader.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
-import ErrorBanner from '../components/ErrorBanner.jsx';
+import ErrorState from '../components/ErrorState.jsx';
 
 export default function AnalysisPage() {
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    setError(null);
     api.getAnalysis().then(setAnalysis).catch(setError);
-  }, []);
+  }, [attempt]);
 
-  if (error) return <ErrorBanner error={error} />;
-  if (!analysis) return <LoadingSpinner label="Analyzing playlists (this can take a while)..." />;
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Analysis" />
+        <ErrorState title="Não foi possível analisar suas playlists" error={error} onRetry={() => setAttempt((n) => n + 1)} />
+      </>
+    );
+  }
+
+  if (!analysis) {
+    return (
+      <>
+        <PageHeader title="Analysis" />
+        <LoadingSpinner label="Analisando playlists (isso pode levar um tempo)..." />
+      </>
+    );
+  }
 
   const duplicateEntries = Object.entries(analysis.duplicatesByPlaylist).filter(
     ([, value]) => value.exactDuplicates.length > 0 || value.fuzzyDuplicates.length > 0
   );
 
   return (
-    <div>
-      <div className="card">
-        <h2>Analysis Overview</h2>
-        <p className="muted">{analysis.limitations.recency}</p>
-      </div>
+    <>
+      <PageHeader title="Analysis" subtitle={analysis.limitations.recency} />
 
       <div className="card">
-        <h3>Duplicates</h3>
-        {duplicateEntries.length === 0 && <p>No duplicates found.</p>}
+        <h3>Duplicatas</h3>
+        {duplicateEntries.length === 0 && <p className="muted">Nenhuma duplicata encontrada.</p>}
         {duplicateEntries.map(([playlistId, value]) => (
           <div key={playlistId} className="sub-section">
             <strong>Playlist {playlistId}</strong>
             <ul>
               {value.exactDuplicates.map((duplicate) => (
                 <li key={duplicate.trackId}>
-                  Exact: {duplicate.name} — {duplicate.artist} ({duplicate.occurrences.length}x)
+                  Exata: {duplicate.name} — {duplicate.artist} ({duplicate.occurrences.length}x)
                 </li>
               ))}
               {value.fuzzyDuplicates.map((duplicate) => (
                 <li key={duplicate.fingerprint}>
-                  Fuzzy: {duplicate.name} — {duplicate.artist} ({duplicate.occurrences.length}x)
+                  Similar: {duplicate.name} — {duplicate.artist} ({duplicate.occurrences.length}x)
                 </li>
               ))}
             </ul>
@@ -49,22 +64,22 @@ export default function AnalysisPage() {
       </div>
 
       <div className="card">
-        <h3>Small or Abandoned Playlists</h3>
-        {analysis.smallOrAbandoned.length === 0 && <p>None found.</p>}
+        <h3>Playlists pequenas ou abandonadas</h3>
+        {analysis.smallOrAbandoned.length === 0 && <p className="muted">Nenhuma encontrada.</p>}
         <ul>
           {analysis.smallOrAbandoned.map((item) => (
             <li key={item.playlistId}>
-              {item.name} — {item.trackCount} tracks
-              {item.isSmall && ' (small)'}
-              {item.isStale && ` (stale, ${item.daysSinceLastAdd} days since last add)`}
+              {item.name} — {item.trackCount} músicas
+              {item.isSmall && ' (pequena)'}
+              {item.isStale && ` (parada há ${item.daysSinceLastAdd} dias)`}
             </li>
           ))}
         </ul>
       </div>
 
       <div className="card">
-        <h3>Similar / Merge Candidates</h3>
-        {analysis.mergeCandidates.length === 0 && <p>None found.</p>}
+        <h3>Playlists semelhantes / candidatas a fusão</h3>
+        {analysis.mergeCandidates.length === 0 && <p className="muted">Nenhuma encontrada.</p>}
         <ul>
           {analysis.mergeCandidates.map((candidate) => (
             <li key={`${candidate.playlistIdA}-${candidate.playlistIdB}`}>
@@ -75,8 +90,8 @@ export default function AnalysisPage() {
       </div>
 
       <div className="card">
-        <h3>Rename Suggestions</h3>
-        {analysis.renameSuggestions.length === 0 && <p>None found.</p>}
+        <h3>Sugestões de renomeação</h3>
+        {analysis.renameSuggestions.length === 0 && <p className="muted">Nenhuma encontrada.</p>}
         <ul>
           {analysis.renameSuggestions.map((suggestion) => (
             <li key={suggestion.playlistId}>
@@ -89,8 +104,8 @@ export default function AnalysisPage() {
       </div>
 
       <Link to="/plan" className="button">
-        Build a Plan
+        Criar plano
       </Link>
-    </div>
+    </>
   );
 }
