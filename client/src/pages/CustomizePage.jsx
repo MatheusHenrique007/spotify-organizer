@@ -202,10 +202,14 @@ export default function CustomizePage() {
           <button
             type="button"
             className="button"
-            disabled={busy || applyPhase === 'theme' || applyPhase === 'apply'}
+            disabled={busy || imageBusy || applyPhase === 'theme' || applyPhase === 'apply'}
             onClick={() => runApplyFlow(false)}
           >
-            {busy && (applyPhase === 'theme' || applyPhase === 'apply') ? 'Aplicando no Spotify...' : 'Aplicar no Spotify'}
+            {busy && (applyPhase === 'theme' || applyPhase === 'apply')
+              ? 'Aplicando no Spotify...'
+              : imageBusy
+                ? 'Processando imagem...'
+                : 'Aplicar no Spotify'}
           </button>
         </div>
       </div>
@@ -235,6 +239,13 @@ export default function CustomizePage() {
         <div className="editor-inline-error">
           <StatusBadge status="error">Falha ao restaurar</StatusBadge>
           <p>{restoreResult.info.message}</p>
+          {restoreResult.info.requiresBackupUpdate && (
+            <div className="editor-actions-row">
+              <button type="button" className="button" onClick={handleUpdateBackup}>
+                Atualizar backup
+              </button>
+            </div>
+          )}
         </div>
       )}
     </>
