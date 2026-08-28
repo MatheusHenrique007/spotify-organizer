@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { applyOperationEdits } from '../lib/planEditing.js';
 import { isDedupeWarningVisible } from '../lib/operationPresentation.js';
+import { buildPlanPreview } from '../lib/planPreview.js';
 import PageHeader from '../components/PageHeader.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import ErrorState from '../components/ErrorState.jsx';
@@ -59,6 +60,7 @@ export default function PlanBuilderPage() {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [phase, setPhase] = useState('loading');
+  const [previewVisible, setPreviewVisible] = useState(false);
 
   useEffect(() => {
     api
@@ -199,15 +201,49 @@ export default function PlanBuilderPage() {
             ))}
           </div>
 
-          <button
-            type="button"
-            className="button"
-            style={{ marginTop: 'var(--space-4)' }}
-            disabled={selectedIds.size === 0 || phase === 'executing'}
-            onClick={handleExecute}
-          >
-            {phase === 'executing' ? 'Executando...' : `Aplicar ${selectedIds.size} operação(ões)`}
-          </button>
+          <div className="editor-actions-row" style={{ marginTop: 'var(--space-4)' }}>
+            <button
+              type="button"
+              className="button-secondary button"
+              disabled={selectedIds.size === 0 || phase === 'executing'}
+              onClick={() => setPreviewVisible((visible) => !visible)}
+            >
+              {previewVisible ? 'Ocultar pré-visualização' : 'Pré-visualizar alterações'}
+            </button>
+            <button
+              type="button"
+              className="button"
+              disabled={selectedIds.size === 0 || phase === 'executing'}
+              onClick={handleExecute}
+            >
+              {phase === 'executing' ? 'Executando...' : `Aplicar ${selectedIds.size} operação(ões)`}
+            </button>
+          </div>
+
+          {previewVisible && (
+            <div className="plan-preview">
+              <StatusBadge status="warning">Preview</StatusBadge>
+              <p className="muted">Nenhuma alteração foi feita. Isto só mostra o que seria enviado ao Spotify.</p>
+              {(() => {
+                const preview = buildPlanPreview(applyOperationEdits(plan.operations, renameEdits), selectedIds);
+                return (
+                  <ul className="plan-preview-list">
+                    {preview.items.map((item) => (
+                      <li key={item.id} className="plan-preview-item">
+                        <strong>{item.label}</strong>
+                        <span className="muted">{item.description}</span>
+                        {item.hasWarning && (
+                          <span className="plan-preview-warning">
+                            <WarningIcon size={14} aria-hidden="true" /> pode remover mais do que o esperado
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
+            </div>
+          )}
         </div>
       )}
     </>
