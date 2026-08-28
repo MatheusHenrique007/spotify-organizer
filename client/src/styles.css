@@ -1138,6 +1138,48 @@ input[type='text'] {
   font-size: var(--text-sm);
 }
 
+/* ---------- History filter/search ---------- */
+
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.history-search {
+  flex: 1 1 240px;
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.history-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.history-filter-chip {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.history-filter-chip.is-active {
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
 /* ---------- History activity log ---------- */
 
 .activity-entry {
