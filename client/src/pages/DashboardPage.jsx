@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import PageHeader from '../components/PageHeader.jsx';
 import PlaylistCard from '../components/PlaylistCard.jsx';
+import LibrarySummary from '../components/LibrarySummary.jsx';
 import { PlaylistGridSkeleton } from '../components/LoadingSpinner.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import EmptyState from '../components/EmptyState.jsx';
@@ -51,6 +52,8 @@ export default function DashboardPage() {
       <p className="page-header-meta">
         {profile.display_name || profile.id} · {playlists.length} playlist{playlists.length === 1 ? '' : 's'}
       </p>
+
+      {playlists.length > 0 && <LibrarySummary playlists={playlists} />}
 
       {playlists.length === 0 ? (
         <EmptyState
