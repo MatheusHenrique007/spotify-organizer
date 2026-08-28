@@ -1,9 +1,10 @@
 const BASE = '/api';
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, body) {
     super(message);
     this.status = status;
+    this.body = body || null;
   }
 }
 
@@ -15,13 +16,14 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     let message = response.statusText;
+    let body = null;
     try {
-      const data = await response.json();
-      message = data.message || message;
+      body = await response.json();
+      message = body.message || message;
     } catch {
       // ignore body parse failure
     }
-    throw new ApiError(response.status, message);
+    throw new ApiError(response.status, message, body);
   }
 
   if (response.status === 204) return null;
@@ -38,5 +40,10 @@ export const api = {
   buildPlan: (body) => request('/plans/build', { method: 'POST', body: JSON.stringify(body) }),
   executePlan: (body) => request('/plans/execute', { method: 'POST', body: JSON.stringify(body) }),
   getHistory: () => request('/history'),
-  getHistoryEntry: (id) => request(`/history/${id}`)
+  getHistoryEntry: (id) => request(`/history/${id}`),
+  getSpicetifyStatus: () => request('/spicetify/status'),
+  saveSpicetifyTheme: (body) => request('/spicetify/theme', { method: 'POST', body: JSON.stringify(body) }),
+  applySpicetifyTheme: (body = {}) => request('/spicetify/apply', { method: 'POST', body: JSON.stringify(body) }),
+  restoreSpicetify: (body = {}) => request('/spicetify/restore', { method: 'POST', body: JSON.stringify(body) }),
+  backupSpicetify: (body = {}) => request('/spicetify/backup', { method: 'POST', body: JSON.stringify(body) })
 };

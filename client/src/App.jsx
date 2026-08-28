@@ -9,6 +9,7 @@ import PlaylistDetailPage from './pages/PlaylistDetailPage.jsx';
 import AnalysisPage from './pages/AnalysisPage.jsx';
 import PlanBuilderPage from './pages/PlanBuilderPage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
+import CustomizePage from './pages/CustomizePage.jsx';
 
 function useAuth() {
   const [authenticated, setAuthenticated] = useState(null);
@@ -73,6 +74,14 @@ export default function App() {
           element={
             <RequireAuth authenticated={authenticated}>
               <HistoryPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/customize"
+          element={
+            <RequireAuth authenticated={authenticated}>
+              <CustomizePage />
             </RequireAuth>
           }
         />

@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "description": "Local personal-use Spotify Playlist Organizer",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "workspaces": [
     "server",
     "client"

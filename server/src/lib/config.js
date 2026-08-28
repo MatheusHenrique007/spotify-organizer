@@ -37,5 +37,14 @@ export const config = {
   dataDir: path.resolve(__dirname, '../../data'),
   tokensFile: path.resolve(__dirname, '../../data/tokens.json'),
   historyFile: path.resolve(__dirname, '../../data/history.json'),
-  artistGenreCacheFile: path.resolve(__dirname, '../../data/artist-genre-cache.json')
+  artistGenreCacheFile: path.resolve(__dirname, '../../data/artist-genre-cache.json'),
+  spicetifyThemeConfigFile: path.resolve(__dirname, '../../data/spicetify-theme.json'),
+  spicetify: {
+    exePath: process.env.SPICETIFY_EXE_PATH || path.join(process.env.LOCALAPPDATA || '', 'spicetify', 'spicetify.exe'),
+    configFile: path.join(process.env.APPDATA || '', 'spicetify', 'config-xpui.ini'),
+    themesDir: path.join(process.env.LOCALAPPDATA || '', 'spicetify', 'Themes'),
+    backupDir: path.join(process.env.APPDATA || '', 'spicetify', 'Backup'),
+    themeName: 'SpotifyOrganizer',
+    maxCssBytes: 2 * 1024 * 1024
+  }
 };

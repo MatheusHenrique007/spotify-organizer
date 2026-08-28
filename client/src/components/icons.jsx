@@ -127,6 +127,36 @@ export function ArrowRightIcon(props) {
   );
 }
 
+export function PaletteIcon(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-.9.7-1.5 1.5-1.5H16a4 4 0 0 0 4-4c0-5.5-3.5-10-8-10Z" />
+    </Svg>
+  );
+}
+
+export function ImageIcon(props) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-5-5L5 21" />
+    </Svg>
+  );
+}
+
+export function SparklesIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2" />
+    </Svg>
+  );
+}
+
 export function LogOutIcon(props) {
   return (
     <Svg {...props}>

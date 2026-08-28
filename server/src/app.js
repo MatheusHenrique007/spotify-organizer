@@ -7,6 +7,7 @@ import { playlistsRouter } from './routes/playlists.js';
 import { analysisRouter } from './routes/analysis.js';
 import { plansRouter } from './routes/plans.js';
 import { historyRouter } from './routes/history.js';
+import { spicetifyRouter } from './routes/spicetify.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 export function createApp() {
@@ -24,6 +25,7 @@ export function createApp() {
   app.use('/api/analysis', analysisRouter);
   app.use('/api/plans', plansRouter);
   app.use('/api/history', historyRouter);
+  app.use('/api/spicetify', spicetifyRouter);
 
   app.use(errorHandler);
 

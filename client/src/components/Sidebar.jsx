@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { PlaylistIcon, PlanIcon, HistoryIcon, LogOutIcon, AnalysisIcon } from './icons.jsx';
+import { PlaylistIcon, PlanIcon, HistoryIcon, LogOutIcon, AnalysisIcon, PaletteIcon } from './icons.jsx';
 
 const LINKS = [
   { to: '/dashboard', label: 'Playlists', icon: PlaylistIcon },
@@ -8,6 +8,8 @@ const LINKS = [
   { to: '/plan', label: 'Plano', icon: PlanIcon },
   { to: '/history', label: 'Histórico', icon: HistoryIcon }
 ];
+
+const PERSONALIZATION_LINKS = [{ to: '/customize', label: 'Aparência', icon: PaletteIcon }];
 
 export default function Sidebar({ authenticated }) {
   const navigate = useNavigate();
@@ -31,6 +33,19 @@ export default function Sidebar({ authenticated }) {
       <div className="sidebar-section-label">Principal</div>
       <div className="sidebar-nav">
         {LINKS.map(({ to, label, icon: Icon }) => {
+          const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
+          return (
+            <Link key={to} to={to} className="sidebar-link" aria-current={isActive ? 'page' : undefined}>
+              <Icon aria-hidden="true" />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="sidebar-section-label">Personalização</div>
+      <div className="sidebar-nav">
+        {PERSONALIZATION_LINKS.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
           return (
             <Link key={to} to={to} className="sidebar-link" aria-current={isActive ? 'page' : undefined}>

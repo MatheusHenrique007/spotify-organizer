@@ -60,7 +60,21 @@ export default function HistoryPage() {
           }
         />
       ) : (
-        history.map((entry) => (
+        history.map((entry) =>
+          entry.type === 'spicetify_theme' ? (
+            <div className="activity-entry" key={entry.id}>
+              <div className="activity-entry-header">
+                <strong>Personalização do Spotify · {entry.action}</strong>
+                <span className="activity-timestamp">{new Date(entry.timestamp).toLocaleString()}</span>
+              </div>
+              <div className="activity-result">
+                <StatusBadge status={entry.result === 'success' ? 'success' : 'error'}>
+                  {entry.result === 'success' ? 'Concluído' : 'Falhou'}
+                </StatusBadge>
+                {entry.details?.stderr && entry.result !== 'success' && <p className="muted">{entry.details.stderr}</p>}
+              </div>
+            </div>
+          ) : (
           <div className="activity-entry" key={entry.id}>
             <div className="activity-entry-header">
               <strong>{entry.operationCount} operação(ões)</strong>
@@ -95,7 +109,8 @@ export default function HistoryPage() {
               );
             })}
           </div>
-        ))
+          )
+        )
       )}
     </>
   );
