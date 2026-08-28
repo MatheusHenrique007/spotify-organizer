@@ -59,10 +59,14 @@ export default function PlanBuilderPage() {
   const [renameEdits, setRenameEdits] = useState({});
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [executeError, setExecuteError] = useState(null);
   const [phase, setPhase] = useState('loading');
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    setPhase('loading');
+    setError(null);
     api
       .getAnalysis()
       .then((data) =>
@@ -79,9 +83,9 @@ export default function PlanBuilderPage() {
       })
       .catch((error_) => {
         setError(error_);
-        setPhase('error');
+        setPhase('load-error');
       });
-  }, []);
+  }, [attempt]);
 
   function toggleOperation(id) {
     setSelectedIds((previous) => {
@@ -98,14 +102,18 @@ export default function PlanBuilderPage() {
 
   async function handleExecute() {
     setPhase('executing');
+    setExecuteError(null);
     try {
       const effectivePlan = { ...plan, operations: applyOperationEdits(plan.operations, renameEdits) };
       const data = await api.executePlan({ plan: effectivePlan, selectedOperationIds: [...selectedIds] });
       setResults(data.results);
       setPhase('done');
     } catch (error_) {
-      setError(error_);
-      setPhase('error');
+      // Execution failing does not mean the plan itself is invalid — keep the user on the
+      // review screen with their selection/edits intact instead of discarding everything
+      // behind a full-page error, and let them explicitly retry the same request.
+      setExecuteError(error_);
+      setPhase('review');
     }
   }
 
@@ -119,11 +127,11 @@ export default function PlanBuilderPage() {
     );
   }
 
-  if (phase === 'error') {
+  if (phase === 'load-error') {
     return (
       <>
         <PageHeader title="Plano" subtitle="Analise e execute alterações nas suas playlists." />
-        <ErrorState title="Não foi possível montar o plano" error={error} />
+        <ErrorState title="Não foi possível montar o plano" error={error} onRetry={() => setAttempt((n) => n + 1)} />
       </>
     );
   }
@@ -201,6 +209,13 @@ export default function PlanBuilderPage() {
             ))}
           </div>
 
+          {executeError && (
+            <div className="editor-inline-error">
+              <StatusBadge status="error">Não foi possível executar o plano</StatusBadge>
+              <p>{executeError.message || String(executeError)}</p>
+            </div>
+          )}
+
           <div className="editor-actions-row" style={{ marginTop: 'var(--space-4)' }}>
             <button
               type="button"
@@ -216,7 +231,7 @@ export default function PlanBuilderPage() {
               disabled={selectedIds.size === 0 || phase === 'executing'}
               onClick={handleExecute}
             >
-              {phase === 'executing' ? 'Executando...' : `Aplicar ${selectedIds.size} operação(ões)`}
+              {phase === 'executing' ? 'Executando...' : executeError ? 'Tentar novamente' : `Aplicar ${selectedIds.size} operação(ões)`}
             </button>
           </div>
 
