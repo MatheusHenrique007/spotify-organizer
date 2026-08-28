@@ -1,6 +1,10 @@
-import { KNOWN_COLOR_FIELDS, PRESETS } from '../lib/spicetifyTheme.js';
+import { useState } from 'react';
+import { KNOWN_COLOR_FIELDS, PRESETS, serializeTheme, parseThemeFile } from '../lib/spicetifyTheme.js';
 
 export default function ThemeEditor({ draft, onChange, imageError, imageBusy, onImagePick }) {
+  const [importError, setImportError] = useState(null);
+  const [importMessage, setImportMessage] = useState(null);
+
   function setColor(key, value) {
     onChange({ ...draft, colors: { ...draft.colors, [key]: value.replace('#', '').toUpperCase() } });
   }
@@ -13,6 +17,39 @@ export default function ThemeEditor({ draft, onChange, imageError, imageBusy, on
     const file = event.target.files?.[0];
     if (!file) return;
     await onImagePick(file);
+  }
+
+  function handleExportTheme() {
+    const doc = serializeTheme(draft);
+    const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'spotify-theme.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleImportFile(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setImportError(null);
+    setImportMessage(null);
+
+    const reader = new FileReader();
+    reader.onerror = () => setImportError('Não foi possível ler o arquivo.');
+    reader.onload = () => {
+      try {
+        const imported = parseThemeFile(reader.result);
+        onChange(imported);
+        setImportMessage('Tema importado.');
+      } catch (error) {
+        setImportError(error.message);
+      }
+    };
+    reader.readAsText(file);
   }
 
   return (
@@ -32,6 +69,27 @@ export default function ThemeEditor({ draft, onChange, imageError, imageBusy, on
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="theme-editor-section">
+        <h3>Importar / Exportar</h3>
+        <div className="theme-import-export-row">
+          <button type="button" className="button-secondary button" onClick={handleExportTheme}>
+            Exportar tema
+          </button>
+          <label className="button-secondary button theme-import-label">
+            Importar tema
+            <input
+              type="file"
+              accept=".json,application/json"
+              aria-label="Importar arquivo de tema"
+              onChange={handleImportFile}
+              className="theme-import-input"
+            />
+          </label>
+        </div>
+        {importMessage && <p className="muted">{importMessage}</p>}
+        {importError && <p className="editor-inline-error">{importError}</p>}
       </div>
 
       <div className="theme-editor-section">

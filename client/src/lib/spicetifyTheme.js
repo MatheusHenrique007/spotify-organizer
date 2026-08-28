@@ -87,6 +87,102 @@ export function defaultDraftTheme() {
   };
 }
 
+const THEME_FILE_FORMAT = 'spotify-organizer-theme';
+const THEME_FILE_VERSION = 1;
+const KNOWN_COLOR_KEYS = new Set(KNOWN_COLOR_FIELDS.map((field) => field.key));
+const HEX_COLOR_RE = /^[0-9A-Fa-f]{6}$/;
+const BACKGROUND_DATA_URI_RE = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/;
+
+function clampNumber(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+// Produces the on-disk document — only the 5 confirmed-supported color keys, the
+// background (if any), and the two numeric knobs. Never includes tokens, Spotify account
+// data, history, or any machine-local path.
+export function serializeTheme(draft) {
+  const colors = {};
+  for (const key of Object.keys(draft.colors || {})) {
+    if (KNOWN_COLOR_KEYS.has(key) && HEX_COLOR_RE.test(draft.colors[key])) {
+      colors[key] = draft.colors[key].toUpperCase();
+    }
+  }
+
+  return {
+    format: THEME_FILE_FORMAT,
+    version: THEME_FILE_VERSION,
+    theme: {
+      colors,
+      backgroundDataUri: draft.backgroundDataUri || null,
+      overlayOpacity: clampNumber(draft.overlayOpacity, 0, 1, 0.6),
+      blurPx: clampNumber(draft.blurPx, 0, 20, 0)
+    }
+  };
+}
+
+// Defensive parse: throws a user-facing Error (never a raw stack trace) on anything
+// invalid. Returns a plain draft-shaped object on success — never mutates or touches
+// localStorage/the backend itself; the caller decides what to do with the result.
+export function parseThemeFile(text) {
+  let document_;
+  try {
+    document_ = JSON.parse(text);
+  } catch {
+    throw new Error('Arquivo não é um JSON válido.');
+  }
+
+  if (!document_ || typeof document_ !== 'object' || Array.isArray(document_)) {
+    throw new Error('Formato de arquivo inválido.');
+  }
+  if (document_.format !== THEME_FILE_FORMAT) {
+    throw new Error('Este arquivo não é um tema do Spotify Organizer.');
+  }
+  if (document_.version !== THEME_FILE_VERSION) {
+    throw new Error(`Versão de arquivo não suportada (${document_.version ?? 'desconhecida'}).`);
+  }
+
+  const theme = document_.theme;
+  if (!theme || typeof theme !== 'object' || Array.isArray(theme)) {
+    throw new Error('Formato de arquivo inválido.');
+  }
+
+  const colors = {};
+  if (theme.colors !== undefined) {
+    if (typeof theme.colors !== 'object' || theme.colors === null || Array.isArray(theme.colors)) {
+      throw new Error('Formato de arquivo inválido.');
+    }
+    for (const [key, value] of Object.entries(theme.colors)) {
+      if (!KNOWN_COLOR_KEYS.has(key)) continue; // unsupported/removed property — silently ignored, never reintroduced
+      if (typeof value !== 'string' || !HEX_COLOR_RE.test(value)) {
+        throw new Error(`Cor inválida para "${key}".`);
+      }
+      colors[key] = value.toUpperCase();
+    }
+  }
+
+  let backgroundDataUri = null;
+  if (theme.backgroundDataUri !== undefined && theme.backgroundDataUri !== null) {
+    if (typeof theme.backgroundDataUri !== 'string' || !BACKGROUND_DATA_URI_RE.test(theme.backgroundDataUri)) {
+      throw new Error('Imagem de fundo em formato inválido (esperado data:image/jpeg|png|webp;base64,...).');
+    }
+    const base64 = theme.backgroundDataUri.slice(theme.backgroundDataUri.indexOf(',') + 1);
+    const byteLength = Math.ceil((base64.length * 3) / 4);
+    if (byteLength > MAX_BACKGROUND_BYTES) {
+      throw new Error(`Imagem de fundo muito grande (${Math.round(byteLength / 1024)}KB, máximo ${Math.round(MAX_BACKGROUND_BYTES / 1024)}KB).`);
+    }
+    backgroundDataUri = theme.backgroundDataUri;
+  }
+
+  return {
+    colors,
+    backgroundDataUri,
+    overlayOpacity: clampNumber(theme.overlayOpacity, 0, 1, 0.6),
+    blurPx: clampNumber(theme.blurPx, 0, 20, 0)
+  };
+}
+
 // Loads a File into an <img>, downsizes via canvas to MAX_IMAGE_EDGE on the long side,
 // and re-encodes as JPEG under MAX_BACKGROUND_BYTES. Real compression happens here so
 // the server never has to run a native image library just to shrink an upload.
