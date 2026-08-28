@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import PageHeader from '../components/PageHeader.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import ErrorState from '../components/ErrorState.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import PlaylistHero from '../components/PlaylistHero.jsx';
+import PlaylistEditorModal from '../components/PlaylistEditorModal.jsx';
+import { getAppearance } from '../lib/playlistAppearance.js';
 import { ArrowLeftIcon, MusicIcon } from '../components/icons.jsx';
 
 function formatDuration(ms) {
@@ -31,6 +33,8 @@ export default function PlaylistDetailPage() {
   const [tracks, setTracks] = useState(null);
   const [error, setError] = useState(null);
   const [attempt, setAttempt] = useState(0);
+  const [editorTab, setEditorTab] = useState(null);
+  const [appearance, setAppearance] = useState(() => getAppearance(id));
 
   useEffect(() => {
     setError(null);
@@ -42,6 +46,10 @@ export default function PlaylistDetailPage() {
       .catch(setError);
   }, [id, attempt]);
 
+  useEffect(() => {
+    setAppearance(getAppearance(id));
+  }, [id]);
+
   if (error) {
     return <ErrorState title="Não foi possível carregar esta playlist" error={error} onRetry={() => setAttempt((n) => n + 1)} />;
   }
@@ -51,6 +59,12 @@ export default function PlaylistDetailPage() {
   const cover = playlist?.images?.[0]?.url;
   const totalDuration = formatTotalDuration(tracks);
   const trackDigits = String(tracks.length).length;
+  const meta = `${tracks.length} ${tracks.length === 1 ? 'música' : 'músicas'}${totalDuration ? ` • ${totalDuration}` : ''}`;
+
+  function handleApplied({ appearanceOnly }) {
+    setAppearance(getAppearance(id));
+    if (!appearanceOnly) setAttempt((n) => n + 1);
+  }
 
   return (
     <>
@@ -58,19 +72,23 @@ export default function PlaylistDetailPage() {
         <ArrowLeftIcon size={14} aria-hidden="true" /> Voltar
       </Link>
 
-      <div className="detail-header">
-        <div className="detail-cover">
-          {cover ? <img src={cover} alt="" /> : <MusicIcon size={40} aria-hidden="true" />}
-        </div>
-        <div className="detail-meta">
-          <h1>{playlist?.name ?? 'Playlist'}</h1>
-          {playlist?.description && <p>{playlist.description}</p>}
-          <p>
-            {tracks.length} {tracks.length === 1 ? 'música' : 'músicas'}
-            {totalDuration && ` • ${totalDuration}`}
-          </p>
-        </div>
-      </div>
+      <PlaylistHero
+        playlist={playlist}
+        meta={meta}
+        cover={cover}
+        appearance={appearance}
+        onEdit={() => setEditorTab('content')}
+        onPersonalize={() => setEditorTab('appearance')}
+      />
+
+      {editorTab && playlist && (
+        <PlaylistEditorModal
+          playlist={playlist}
+          tab={editorTab}
+          onClose={() => setEditorTab(null)}
+          onApplied={handleApplied}
+        />
+      )}
 
       {tracks.length === 0 ? (
         <EmptyState icon={MusicIcon} title="Nenhuma música nesta playlist" description="As faixas adicionadas aparecerão aqui." />
