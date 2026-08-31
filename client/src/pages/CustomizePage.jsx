@@ -155,11 +155,13 @@ export default function CustomizePage() {
               const state =
                 applyPhase === 'error'
                   ? 'error'
-                  : index < currentIndex || applyPhase === 'done'
-                    ? 'done'
-                    : index === currentIndex
-                      ? 'active'
-                      : 'pending';
+                  : applyPhase === 'done' && step.key === 'done' && applyResult?.ok === false
+                    ? 'error'
+                    : index < currentIndex || applyPhase === 'done'
+                      ? 'done'
+                      : index === currentIndex
+                        ? 'active'
+                        : 'pending';
               return (
                 <div key={step.key} className={`apply-step apply-step-${state}`}>
                   {state === 'done' ? '✓' : state === 'active' ? '●' : state === 'error' ? '✕' : '○'} {step.label}
