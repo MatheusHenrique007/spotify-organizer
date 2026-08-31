@@ -63,7 +63,7 @@ framework, no component library, no icon library (icons are inline SVG).
 
 **Spotify** — Spotify Web API (OAuth 2.0 / PKCE, playlists, tracks, images).
 
-**Testing** — Vitest on both server and client. 128 tests total (see [Testing](#testing)).
+**Testing** — Vitest on both server and client. 194 tests total (see [Testing](#testing)).
 
 **Tooling** — npm workspaces, Git.
 
@@ -177,7 +177,7 @@ every push and pull request, on a plain Ubuntu runner — the automated suite ne
 Spotify Desktop install, or the Spicetify CLI, so nothing about the Theme Manager's real-machine behavior is
 exercised in CI (that part was validated manually, as described throughout this README).
 
-Current suite: **server 96 tests, client 32 tests — 128 total**, all passing, all against real application
+Current suite: **server 122 tests, client 72 tests — 194 total**, all passing, all against real application
 behavior (no placeholder/smoke-only tests). Server tests cover the analysis engine (duplicate detection,
 similarity scoring, small/abandoned playlist detection), the operations planner, the Spotify client
 (retry/rate-limit/token-refresh behavior), the executor (all 9 operation types, including the
@@ -186,7 +186,7 @@ Spicetify CLI or touches a real Spotify install) — all against mocked external
 integration-level. Separately from the automated suite, several playlist operations (including the ones described
 in Known Limitations) and every Theme Manager code path (apply, restore, backup, and the automatic Spotify-close
 step) were also validated with real calls against a live, authenticated Spotify account and a real Spotify Desktop
-install during development; that validation isn't repeatable in CI and isn't counted in the 128 figure. Client
+install during development; that validation isn't repeatable in CI and isn't counted in the 194 figure. Client
 tests cover pure presentation logic (plan editing, operation labels, history detail formatting, Theme Manager
 draft/preset/status logic) — no DOM rendering library is used.
 
