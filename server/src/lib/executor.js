@@ -72,6 +72,17 @@ async function deletePlaylistItemsVerified(playlistId, uris) {
   let snapshotId = await getPlaylistSnapshotId(playlistId);
   snapshotsUsed.push(snapshotId);
   let response = await deleteUri(playlistId, uris, snapshotId);
+
+  // A dry-run DELETE is never actually sent to Spotify, so a post-write GET would just read the
+  // untouched playlist and report the URIs as "still present" — a false failure, not a real one.
+  // Skip verification entirely and take the simulated response at its word.
+  if (response.dryRun) {
+    return {
+      response,
+      details: { uris, attempts: 1, retryPerformed: false, verificationPassed: true, snapshotsUsed, simulated: true }
+    };
+  }
+
   let verificationPassed = !(await anyUriStillPresent(playlistId, uris));
   let retryPerformed = false;
 

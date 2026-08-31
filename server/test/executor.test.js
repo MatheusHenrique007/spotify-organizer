@@ -501,4 +501,31 @@ describe('executor — dry run safety', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
+
+  describe.each([
+    ['remove_tracks', (uris) => ({ playlistId: 'p1', trackUris: uris })],
+    ['dedupe_tracks', (uris) => ({ playlistId: 'p1', trackUrisToRemove: uris })]
+  ])('%s skips post-write verification when the DELETE was dry-run-simulated', (type, params) => {
+    const uri = 'spotify:track:X';
+
+    it('never issues the verification GET and reports simulated success', async () => {
+      spotifyFetch
+        .mockResolvedValueOnce({ snapshot_id: 'snap-1' }) // getPlaylistSnapshotId
+        .mockResolvedValueOnce({ snapshot_id: 'dry-run-snapshot', dryRun: true }); // DELETE (simulated)
+
+      const operation = createOperation(type, params([uri]));
+      const result = await executeOperation(operation);
+
+      expect(result.success).toBe(true);
+      expect(spotifyFetch).toHaveBeenCalledTimes(2); // snapshot + DELETE only — no verification GET
+      expect(result.details).toEqual({
+        uris: [uri],
+        attempts: 1,
+        retryPerformed: false,
+        verificationPassed: true,
+        snapshotsUsed: ['snap-1'],
+        simulated: true
+      });
+    });
+  });
 });
