@@ -73,9 +73,7 @@ export default function CustomizePage() {
       const info = describeApplyError(error);
       setApplyErrorInfo(info);
       setApplyPhase('error');
-      if (info.requiresConfirmClose) {
-        setPendingConfirmClose(true);
-      }
+      setPendingConfirmClose(info.requiresConfirmClose === true);
     } finally {
       setBusy(false);
     }
