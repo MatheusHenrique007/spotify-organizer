@@ -39,6 +39,11 @@ export default function HistoryPage() {
       .catch(setError);
   }, [attempt]);
 
+  const filteredHistory = useMemo(
+    () => filterHistory(history ?? [], { query, type: typeFilter, status: statusFilter }),
+    [history, query, typeFilter, statusFilter]
+  );
+
   if (error) {
     return (
       <>
@@ -58,10 +63,6 @@ export default function HistoryPage() {
   }
 
   const hasActiveFilters = query.trim() !== '' || typeFilter !== 'all' || statusFilter !== 'all';
-  const filteredHistory = useMemo(
-    () => filterHistory(history, { query, type: typeFilter, status: statusFilter }),
-    [history, query, typeFilter, statusFilter]
-  );
 
   function clearFilters() {
     setQuery('');
