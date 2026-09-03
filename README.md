@@ -393,8 +393,7 @@ in the sense of multi-user or public deployment — see Security Notes.
 
 ## License
 
-No license file is included in this repository. All rights reserved by default under copyright law unless a
-license is added.
+[MIT](LICENSE)
 
 ## Manual Step Required
 
