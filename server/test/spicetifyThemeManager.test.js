@@ -86,4 +86,27 @@ describe('spicetify theme manager', () => {
     const css = [...store.files.entries()].find(([k]) => k.endsWith('user.css'))[1];
     expect(css).not.toContain('main-yourLibraryX-libraryContainer');
   });
+
+  it('neutralizes the right panel ::before overlay and applies the background image to the panel itself', () => {
+    generateTheme({ backgroundDataUri: 'data:image/jpeg;base64,QUFB' });
+    const css = [...store.files.entries()].find(([k]) => k.endsWith('user.css'))[1];
+
+    expect(css).toContain('#Desktop_PanelContainer_Id::before');
+    const beforeRuleStart = css.indexOf('#Desktop_PanelContainer_Id::before');
+    const beforeRule = css.slice(beforeRuleStart, beforeRuleStart + 100);
+    expect(beforeRule).toContain('background-color: transparent !important');
+
+    const panelRuleStart = css.indexOf('#Desktop_PanelContainer_Id {');
+    expect(panelRuleStart).toBeGreaterThan(-1);
+    const panelRule = css.slice(panelRuleStart, panelRuleStart + 300);
+    expect(panelRule).toContain('background-image:');
+    expect(panelRule).toContain('data:image/jpeg;base64,QUFB');
+    expect(panelRule).toContain('background-size: cover');
+  });
+
+  it('does not touch the right panel selector or its ::before when no background image is set', () => {
+    generateTheme({ colors: { button: 'FF3B30' } });
+    const css = [...store.files.entries()].find(([k]) => k.endsWith('user.css'))[1];
+    expect(css).not.toContain('Desktop_PanelContainer_Id');
+  });
 });

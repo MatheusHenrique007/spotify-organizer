@@ -111,6 +111,24 @@ function buildUserCss({ backgroundDataUri, overlayOpacity, blurPx }) {
   background-repeat: no-repeat;
 }
 `;
+
+    // #Desktop_PanelContainer_Id (the right-hand Now Playing / Queue / Lyrics panel) already
+    // receives our background-image correctly per computed style, but its own ::before
+    // pseudo-element — an absolutely positioned, full-size, opaque layer painted from the same
+    // `main` variable — sits on top of it and hides it completely. Confirmed via real CDP
+    // inspection (DOM tree walk + temporary transparent override) that neutralizing only that
+    // pseudo-element's background reveals the image without affecting album art, queue, or
+    // lyrics content, which render in later layers above both.
+    css += `#Desktop_PanelContainer_Id::before {
+  background-color: transparent !important;
+}
+#Desktop_PanelContainer_Id {
+  background-image: linear-gradient(rgba(13,13,15,${opacity}), rgba(13,13,15,${Math.min(1, opacity + 0.25)})), url("${backgroundDataUri}");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+`;
   }
 
   return css;
