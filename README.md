@@ -41,6 +41,9 @@ client (not a preview, not a mockup) through [Spicetify](https://spicetify.app) 
 - Local execution history with per-operation results and, where available, retry/verification details
 - Token encryption at rest, automatic refresh, no client secret stored
 - Loading, empty, and error states with retry — no raw stack traces shown to the user
+- A backend that's unreachable (down, network error) is never treated as "logged out" — the client
+  distinguishes a real "not authenticated" response from a failed connectivity check and offers a retry instead
+  of redirecting to login
 - Responsive layout, from 375px mobile up
 
 ### Theme Manager (Windows only)
@@ -63,7 +66,7 @@ framework, no component library, no icon library (icons are inline SVG).
 
 **Spotify** — Spotify Web API (OAuth 2.0 / PKCE, playlists, tracks, images).
 
-**Testing** — Vitest on both server and client. 196 tests total (see [Testing](#testing)).
+**Testing** — Vitest on both server and client. 201 tests total (see [Testing](#testing)).
 
 **Tooling** — npm workspaces, Git.
 
@@ -177,7 +180,7 @@ every push and pull request, on a plain Ubuntu runner — the automated suite ne
 Spotify Desktop install, or the Spicetify CLI, so nothing about the Theme Manager's real-machine behavior is
 exercised in CI (that part was validated manually, as described throughout this README).
 
-Current suite: **server 124 tests, client 72 tests — 196 total**, all passing, all against real application
+Current suite: **server 129 tests, client 72 tests — 201 total**, all passing, all against real application
 behavior (no placeholder/smoke-only tests). Server tests cover the analysis engine (duplicate detection,
 similarity scoring, small/abandoned playlist detection), the operations planner, the Spotify client
 (retry/rate-limit/token-refresh behavior), the executor (all 9 operation types, including the
@@ -186,7 +189,7 @@ Spicetify CLI or touches a real Spotify install) — all against mocked external
 integration-level. Separately from the automated suite, several playlist operations (including the ones described
 in Known Limitations) and every Theme Manager code path (apply, restore, backup, and the automatic Spotify-close
 step) were also validated with real calls against a live, authenticated Spotify account and a real Spotify Desktop
-install during development; that validation isn't repeatable in CI and isn't counted in the 196 figure. Client
+install during development; that validation isn't repeatable in CI and isn't counted in the 201 figure. Client
 tests cover pure presentation logic (plan editing, operation labels, history detail formatting, Theme Manager
 draft/preset/status logic) — no DOM rendering library is used.
 
@@ -269,7 +272,7 @@ Five presets (Spotify Classic, Midnight, Crimson, Purple Night, Minimal) are bun
 this project, not official Spotify themes. Each only sets the confirmed-working properties above; picking one
 never touches the background image already chosen.
 
-### Known limitations
+### Theme Manager limitations
 
 - The mapping from Spicetify's variable names to real, rendered DOM elements is specific to the exact Spotify
   Desktop build tested (`1.2.98.301.gfcaeba72`). Spotify updates itself silently; a future version could change
@@ -321,6 +324,8 @@ don't produce this data (e.g. `add_tracks`) simply don't show a details section 
 - This app is designed for local, single-user, personal use only. It is not hardened for multi-user or public
   deployment.
 - No client secret is stored or required (PKCE flow for public clients).
+- Concurrent OAuth attempts are isolated by `state`: each `/login` gets its own `code_verifier`, states expire
+  after a TTL, and a `state` is single-use — replaying a completed callback is rejected.
 - Tokens are encrypted at rest with AES-256-GCM; the key is derived via scrypt from `TOKEN_ENCRYPTION_KEY`. Anyone
   with both the encrypted file and your `.env` secret can decrypt it — protect your `.env` file.
 - `.env`, the `server/data/` contents, and build artifacts are gitignored.
