@@ -7,14 +7,15 @@ export default function ThemePreview({ draft }) {
   const textColor = draft.colors?.text ? `#${draft.colors.text}` : '#FFFFFF';
   const subtextColor = draft.colors?.subtext ? `#${draft.colors.subtext}` : '#B3B3B3';
   const opacity = draft.overlayOpacity ?? 0.6;
-  const blur = draft.blurPx ?? 0;
 
+  // Blur is not rendered here on purpose: real testing against Spotify Desktop confirmed the
+  // backdrop-filter this app generates has no visible effect there, so showing a working blur in
+  // this preview would promise something the real result never delivers.
   const backgroundStyle = draft.backgroundDataUri
     ? {
         backgroundImage: `linear-gradient(rgba(13,13,15,${opacity}), rgba(13,13,15,${Math.min(1, opacity + 0.25)})), url(${draft.backgroundDataUri})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        filter: blur > 0 ? `blur(${Math.min(blur, 20) / 4}px)` : 'none'
+        backgroundPosition: 'center'
       }
     : { background: mainColor };
 

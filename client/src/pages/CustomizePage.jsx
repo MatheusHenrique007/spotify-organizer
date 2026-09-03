@@ -209,10 +209,18 @@ export default function CustomizePage() {
               ? 'Aplicando no Spotify...'
               : imageBusy
                 ? 'Processando imagem...'
-                : 'Aplicar no Spotify'}
+                : applyPhase === 'error'
+                  ? 'Tentar novamente'
+                  : 'Aplicar no Spotify'}
           </button>
         </div>
       </div>
+
+      {restorePhase === 'running' && (
+        <div className="card customize-apply-card">
+          <LoadingSpinner label="Restaurando Spotify..." />
+        </div>
+      )}
 
       {(restorePhase === 'confirm' || restorePhase === 'confirm-close') && (
         <div className="card customize-apply-card">
