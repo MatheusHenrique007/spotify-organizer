@@ -116,8 +116,13 @@ export default function ThemeEditor({ draft, onChange, imageError, imageBusy, on
 
       <div className="theme-editor-section">
         <h3>
-          <label htmlFor="theme-overlay-range">Intensidade do overlay</label>
+          <label htmlFor="theme-overlay-range">Intensidade do overlay</label>{' '}
+          {Math.round((draft.overlayOpacity ?? 0.6) * 100)}%
         </h3>
+        <p className="muted">
+          Recomendado: 55–70% (padrão: 60%). Valores maiores deixam a imagem mais discreta e aumentam a
+          legibilidade do conteúdo.
+        </p>
         <input
           id="theme-overlay-range"
           type="range"
