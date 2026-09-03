@@ -99,6 +99,18 @@ function buildUserCss({ backgroundDataUri, overlayOpacity, blurPx }) {
 }
 `;
     }
+
+    // .main-yourLibraryX-libraryContainer confirmed via real CDP inspection: it's the actual
+    // "Your Library" panel background (semantic, non-hashed class, stable across navigation),
+    // and today it only receives a flat color from the `main` variable. Applying the same
+    // background image here too, instead of leaving it a separate untouched area.
+    css += `.main-yourLibraryX-libraryContainer {
+  background-image: linear-gradient(rgba(13,13,15,${opacity}), rgba(13,13,15,${Math.min(1, opacity + 0.25)})), url("${backgroundDataUri}");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+`;
   }
 
   return css;

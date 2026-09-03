@@ -69,4 +69,21 @@ describe('spicetify theme manager', () => {
     expect(css).toContain('background-position: center');
     expect(css).not.toContain('main-appShell-mainContent');
   });
+
+  it('also applies the background image to the confirmed "Your Library" panel selector', () => {
+    generateTheme({ backgroundDataUri: 'data:image/jpeg;base64,QUFB' });
+    const css = [...store.files.entries()].find(([k]) => k.endsWith('user.css'))[1];
+    expect(css).toContain('.main-yourLibraryX-libraryContainer');
+    const libraryRuleStart = css.indexOf('.main-yourLibraryX-libraryContainer');
+    const libraryRule = css.slice(libraryRuleStart, libraryRuleStart + 300);
+    expect(libraryRule).toContain('background-image:');
+    expect(libraryRule).toContain('data:image/jpeg;base64,QUFB');
+    expect(libraryRule).toContain('background-size: cover');
+  });
+
+  it('does not touch the library panel selector when no background image is set', () => {
+    generateTheme({ colors: { button: 'FF3B30' } });
+    const css = [...store.files.entries()].find(([k]) => k.endsWith('user.css'))[1];
+    expect(css).not.toContain('main-yourLibraryX-libraryContainer');
+  });
 });
