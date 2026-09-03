@@ -6,13 +6,25 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 
 export const authRouter = Router();
 
-let pendingAuth = null;
+const PENDING_AUTH_TTL_MS = 10 * 60 * 1000;
+const pendingAuthByState = new Map();
+
+function pruneExpiredPendingAuth() {
+  const now = Date.now();
+  for (const [state, entry] of pendingAuthByState) {
+    if (now - entry.createdAt > PENDING_AUTH_TTL_MS) {
+      pendingAuthByState.delete(state);
+    }
+  }
+}
 
 authRouter.get('/login', (req, res) => {
+  pruneExpiredPendingAuth();
+
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
   const state = generateState();
-  pendingAuth = { codeVerifier, state };
+  pendingAuthByState.set(state, { codeVerifier, createdAt: Date.now() });
 
   const params = new URLSearchParams({
     response_type: 'code',
@@ -34,7 +46,12 @@ export const authCallbackHandler = asyncHandler(async (req, res) => {
     return res.redirect(`${config.clientUrl}/login?error=${encodeURIComponent(error)}`);
   }
 
-  if (!pendingAuth || state !== pendingAuth.state) {
+  const pendingEntry = pendingAuthByState.get(state);
+  if (!pendingEntry) {
+    return res.redirect(`${config.clientUrl}/login?error=invalid_state`);
+  }
+  pendingAuthByState.delete(state);
+  if (Date.now() - pendingEntry.createdAt > PENDING_AUTH_TTL_MS) {
     return res.redirect(`${config.clientUrl}/login?error=invalid_state`);
   }
 
@@ -43,7 +60,7 @@ export const authCallbackHandler = asyncHandler(async (req, res) => {
     code,
     redirect_uri: config.spotify.redirectUri,
     client_id: config.spotify.clientId,
-    code_verifier: pendingAuth.codeVerifier
+    code_verifier: pendingEntry.codeVerifier
   });
 
   const response = await fetch(config.spotify.tokenUrl, {
@@ -51,8 +68,6 @@ export const authCallbackHandler = asyncHandler(async (req, res) => {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body
   });
-
-  pendingAuth = null;
 
   if (!response.ok) {
     return res.redirect(`${config.clientUrl}/login?error=token_exchange_failed`);
