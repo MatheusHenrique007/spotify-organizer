@@ -2,7 +2,10 @@ import { MusicIcon } from './icons.jsx';
 import { getThemeGradient } from '../lib/playlistAppearance.js';
 
 export default function PlaylistHero({ playlist, meta, cover, appearance, onPersonalize, onEdit }) {
-  const backgroundImage = appearance.customImage || cover;
+  // Only the explicit custom image overrides the theme background — falling back to the real
+  // Spotify cover here would make every theme swatch invisible whenever the playlist has cover
+  // art (i.e. almost always), since the cover would always win over the selected gradient.
+  const backgroundImage = appearance.customImage;
   const gradient = getThemeGradient(appearance.themeKey);
 
   return (
