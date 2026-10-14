@@ -1,6 +1,10 @@
 # Spotify Organizer
 
 [![CI](https://github.com/MatheusHenrique007/spotify-organizer/actions/workflows/ci.yml/badge.svg)](https://github.com/MatheusHenrique007/spotify-organizer/actions/workflows/ci.yml)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vitest](https://img.shields.io/badge/tested%20with-vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 A web app for organizing Spotify playlists through a plan → review → execute workflow, with verified,
 auditable writes instead of fire-and-forget API calls.
